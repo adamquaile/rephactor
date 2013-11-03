@@ -1,0 +1,19 @@
+{
+    "name": "adamquaile.com/rephactor",
+    "authors": [
+        {
+            "name": "Adam Quaile",
+            "email": "adamquaile@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-0": {
+            "AQ": ["src/"]
+        }
+    },
+    "require": {
+        "symfony/console": "*",
+        "symfony/finder": "*",
+        "symfony/filesystem": "*"
+    }
+}
