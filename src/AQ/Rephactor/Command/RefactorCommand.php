@@ -3,10 +3,14 @@
 namespace AQ\Rephactor\Command;
 
 use AQ\Rephactor\Refactoring\FileRenamer;
+use AQ\Rephactor\Refactoring\NamespaceRenamer;
+use AQ\Rephactor\Refactoring\RefactorCollection;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Finder\Finder;
 
 
@@ -22,18 +26,34 @@ class RefactorCommand extends Command
 
     public function execute(InputInterface $input)
     {
-        /**
-         * @var array $items
-         */
-        $renamer = new FileRenamer();
+        $eventDispatcher = new EventDispatcher();
+        $mainRefactor = new RefactorCollection($eventDispatcher);
 
-        $finder = new Finder();
-        $finder->files()->in($input->getArgument('path'));
+        $origPath = $input->getArgument('path');
+        $tempDir = __DIR__.'/../../../../cache/'.uniqid('rephactor_');
 
-        foreach ($finder as $file) {
-            $renamer->addCandidate($file);
-        }
+        $fs = new Filesystem();
+        $fs->copy($origPath, $tempDir, true);
 
-        $renamer->doRefactor();
+        $workingPath = $tempDir;
+
+
+        // Get Namespace renamers..
+		$renames = $input->getOption('rename-ns');
+		foreach ($renames as $rename) {
+
+            $nsFinder = new Finder();
+            $nsFinder->files()->in($workingPath)->contains('namespace');
+			
+			list($from, $to) = explode(' ', $rename);
+			
+			
+			$renamer = new NamespaceRenamer($nsFinder, $from, $to);
+		    $mainRefactor->addRefactoring($renamer);
+			
+		}
+
+
+        $mainRefactor->doRefactor();
     }
 }

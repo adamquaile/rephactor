@@ -10,3 +10,4 @@ use AQ\Rephactor\Command\RefactorCommand;
 $application = new Application();
 $application->add(new RefactorCommand());
 $application->run();
+
